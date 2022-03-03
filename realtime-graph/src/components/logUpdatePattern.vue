@@ -34,7 +34,7 @@ let connection = new signalR.HubConnectionBuilder()
       // This is the simplest of the strategies
     connection.start()
 
-    let alphbet = 'abcdefghijklmnopqrstuvwxyz'.split('')
+
     let svg = d3.select('svg')
     // let width = +svg.attr('width')
     // let height = +svg.attr('height')
@@ -62,19 +62,17 @@ let connection = new signalR.HubConnectionBuilder()
         .attr('x', function (d, i) { return i * 32 })
         .attr('dy', '.35em')
         .merge(text)
-        .text(function (d) { return d })
+        .text(function (d) { return d.value })
 
       // EXIT
       // Remove old elements as needed.
       text.exit().remove()
     }
 
-    // The initial display
-    update(alphbet)
 update(log)
     // Grad a random sample of letters from the alphabet, in alphabetical order.
     d3.interval(function () {
-      update(d3.shuffle(alphbet)
+      update(d3.shuffle(log)
         .slice(0, Math.floor(Math.random() * 26))
         .sort())
     }, 1500)
