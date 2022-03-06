@@ -1,16 +1,13 @@
 <template>
   <div>
-    <div class="update-enter">
-      <h2>Update Enter</h2>
-    </div>
-    <div class="update-exit">
-      <h2>Update Exit</h2>
-    </div>
+    <h2>General Update Pattern I</h2>
+    <svg width="960" height="1920"></svg>
   </div>
 </template>
 <script>
 import * as d3 from "d3";
 import * as signalR from "@microsoft/signalr";
+
 export default {
   data() {
     return {};
@@ -21,37 +18,86 @@ export default {
       .withUrl("http://localhost:5153/loghub/")
       .configureLogging(signalR.LogLevel.Information)
       .build();
+
+    // Forward hub events through the event, so we can listen for them in the Vue components
     connection.on("refreshlog", (data) => {
       console.log(data);
       log.push(data);
     });
+
+    // You need to call connection.start() to establish the connection but the client wont handle reconnecting for you!
+    // Docs recommend listening onclose and handling it there.
+    // This is the simplest of the strategies
     connection.start();
 
-    let p = d3.select(".update-enter").selectAll("p");
-    let update = p.data(log);
-    let enter = update.enter();
-    update.text(function (d, i) {
-      return "update: " + d.value + " ,index: " + i;
-    });
-    let pEnter = enter.append("p");
-    pEnter.text(function (d, i) {
-      return "enter: " + d.value + " ,index: " + i;
-    });
+    let svg = d3.select("svg");
+    // let width = +svg.attr('width')
+    // let height = +svg.attr('height')
+    // let g = svg.append('g').attr('transform', 'translate(32, ' + (height / 2) + ')')
+    let g = svg.append("g").attr("transform", "translate(20, 30)");
+      let c=0
+    function update(data) {
+      // DATA JOIN
+      // Join new data with old elements, if any.
+      let text = g.selectAll("text").data(data);
 
-    // update exit
-    let dataset2 = [];
-    let p2 = d3.select(".update-exit").selectAll("p");
-    let update2 = p2.data(dataset2);
-    let exit = update2.exit();
-    update2.text(function (d, i) {
-      return "update: " + d.value + " ,index: " + i;
-    });
-    exit.text(function () {
-      return "exit";
-    });
+      // UPDATE
+      // Join new data with old elements, if any.
+      text.attr("class", "update");
 
-    // add data
+      // ENTTER
+      // Create new elements as needed
+      //
+      // ENTER + UPDATE
+      // After merging the entered elements with the update selection,
+      // apply operations to both.
+
+      text
+        .enter()
+        .append("text")
+        .attr("class", "enter")
+        .attr("x", function (d, i) {
+          return i%10 * 32;
+        })
+        .attr("y", (d, i)=>{           
+            if(i%10==0)
+            c++
+            return c*32
+        })
+        .attr("dy", ".35em")
+        .merge(text)
+        .text(function (d) {
+          return d.value;
+        });
+
+      // EXIT
+      // Remove old elements as needed.
+      text.exit().remove();
+    }
+
+    update(log);
+    // Grad a random sample of letters from the alphabet, in alphabetical order.
+    d3.interval(function () {
+      update(
+    log
+      );
+    }, 1500);
+  },
+
+  beforeUnmount() {
+    // Make sure to cleanup SignalR event handlers when removing the component
+    this.$logHub.$off("refreshlog");
   },
 };
 </script>
-<style></style>
+<style>
+text {
+  /* font: bold 48px monospace; */
+}
+.enter {
+  fill: green;
+}
+.update {
+  fill: #333;
+}
+</style>

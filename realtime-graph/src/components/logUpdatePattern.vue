@@ -73,10 +73,7 @@ export default {
     // Grad a random sample of letters from the alphabet, in alphabetical order.
     d3.interval(function () {
       update(
-        d3
-          .shuffle(log)
-          .slice(0, Math.floor(Math.random() * 26))
-          .sort()
+    log
       );
     }, 1500);
   },
